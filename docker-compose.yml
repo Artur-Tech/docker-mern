@@ -1,0 +1,43 @@
+version: "3.8"
+services:
+  mongodb:
+    image: "mongo"
+    volumes:
+      - mongo-data:/data/db
+#ports not required. "27017:27017" used in mongo by default and
+#Compose looks for them and maps on local machine
+    ports:
+      - "27017:27017"
+    env_file:
+      - ./config/development.env
+  frontend:
+#look for Dockerfile to build image
+    image: "notes-frontend-dev"
+    build: ./client
+    ports:
+      - "3000:3000"
+#Compose don`t need absolute path
+    volumes:
+      - ./client/src/:/app/src
+  backend:
+#the same as build: ./client
+    image: "notes-backend-dev"
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    depends_on:
+      - mongodb
+    env_file:
+      - ./config/development.env
+# OR enviroment: NODE_ENV=production
+volumes:
+  mongo-data:
+#Compose don`t create volumes automatically
+#--rm not required. Compose deletes containers after stopping them automatically
+#--name not required. Compose gives names and let containers know each other
+#--network not required. Compose creates network automatically for containers
